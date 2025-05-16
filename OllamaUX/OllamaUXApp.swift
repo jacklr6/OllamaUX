@@ -7,26 +7,37 @@
 
 import SwiftUI
 import SwiftData
+import AppKit
 
 @main
-struct OllamaUXApp: App {
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
-
+struct OllamaUIApp: App {
+    @AppStorage("isDarkMode") private var isDarkMode: Bool = false
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .onAppear {
+                    updateAppearance()
+                }
+                .onChange(of: isDarkMode) {
+                    updateAppearance()
+                }
         }
-        .modelContainer(sharedModelContainer)
+        
+        Settings {
+            SettingsView()
+        }
+        
+        .commands {
+            CommandGroup(replacing: .appInfo) {
+                Button("About \(Bundle.main.infoDictionary?["CFBundleName"] as? String ?? "OllamaUX")") {
+                    NSApp.orderFrontStandardAboutPanel(nil)
+                }
+            }
+        }
+    }
+    
+    func updateAppearance() {
+        NSApp.appearance = isDarkMode ? NSAppearance(named: .darkAqua) : NSAppearance(named: .aqua)
     }
 }
